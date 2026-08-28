@@ -27,7 +27,7 @@ Each cycle:
 3. **Verify locally before pushing**: run the repository's full quality gate (for this repo: `bun run check` plus `node scripts/security-rag-regression-checks.mjs`). Never push a fix you haven't run the gate on.
 4. **Push and reply**, then go back on watch.
 
-Between cycles, don't tight-loop. Use a background Monitor (or scheduled wakeup) that polls every minute and emits an event only when something actionable appears: a new comment id, a check leaving `pending`, or `mergeStateStatus` changing. After a push, expect the next review-bot round in ~5 minutes — don't declare the PR clean before it has had the chance to land.
+Between cycles, don't tight-loop. Use a background Monitor (or scheduled wakeup) that polls every minute and emits an event only when something actionable appears: a new comment id, a check leaving `pending`, or `mergeStateStatus` changing. After a push, expect the next review-bot round in ~5–10 minutes — don't declare the PR clean before it has had the chance to land.
 
 ## Merge conflicts
 
