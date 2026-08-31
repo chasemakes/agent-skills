@@ -11,7 +11,8 @@ Checks going green is **progress, not completion**: every push triggers a fresh 
 
 - the review bot has explicitly passed the **current head commit** (for Codex: the 👍 reaction; see "Knowing when the review bot has passed"),
 - CI is green (or the only failures are ones the user has already acknowledged as pre-existing),
-- the PR is mergeable with no unresolved human change requests.
+- the PR is mergeable with no unresolved human change requests,
+- every review thread has a reply, and threads you fixed or bot-declined are resolved (see "Resolving conversations").
 
 At that point come off watch, report (see Reporting), and hand the merge decision to the user: passing review ends the babysitting, it does not authorize merging.
 
@@ -57,8 +58,34 @@ For each finding:
    - **Fix**: implement (your way, not necessarily theirs), gate, push, reply with the commit hash and what you did, including where your fix differs from their suggestion and why.
    - **Partial**: implement the bounded portion, reply with what you adopted, what you didn't, and the reasoning.
    - **Decline**: reply with the concrete reasoning: why the scenario doesn't occur, or why the cure is worse than the disease. Declining with evidence is a fully legitimate outcome; silently ignoring a finding is not, and neither is implementing something you believe is wrong to make a bot quiet.
+4. **Resolve the thread when it's settled** (see "Resolving conversations"). Reply first, then resolve; never resolve a thread you haven't responded to.
+
+**No orphaned comments.** Every review thread gets at least a reply before you stand down or escalate, even if the reply is just "escalating this to the user because X". A thread with no response looks ignored, and ignored threads erode trust in the whole babysitting loop.
 
 Severity tags (P1/P2/etc.) set your ordering and how much benefit of the doubt to extend, not whether verification happens. Batch one review round into one commit (`Address <reviewer> review: <summary>`) rather than one commit per nit.
+
+## Resolving conversations
+
+Thread resolution is GraphQL-only; the REST comments API can't do it. Map each REST comment id to its thread, then resolve:
+
+```
+# List threads with their first comment's databaseId (to match against REST ids)
+gh api graphql -f query='query { repository(owner: "{owner}", name: "{repo}") {
+  pullRequest(number: <n>) { reviewThreads(first: 100) {
+    nodes { id isResolved isOutdated comments(first: 1) { nodes { databaseId path body } } } } } } }'
+
+# Resolve one
+gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "<id>"}) { thread { isResolved } } }'
+```
+
+When to resolve, after replying:
+
+- **Fixed / Partial**: resolve once the fix commit is pushed and your reply cites it. If the reviewer is a bot that re-reviews on push, resolving immediately is fine; the next round will reopen anything you got wrong.
+- **Declined, bot reviewer**: resolve after replying with your reasoning; no human is coming back to close it, and leaving it open makes the PR look unfinished.
+- **Declined, human reviewer**: reply but leave the thread **unresolved**: the human gets to decide whether your pushback settles it. Resolving a human's thread over their objection is how you get a change-requested review.
+- **Escalated**: reply noting you've surfaced it to the user, leave unresolved.
+
+Before the review-passed stand-down, sweep `reviewThreads` once more: every thread must have a reply from you (or predate your watch with an existing resolution), and every thread you fixed or bot-declined must be resolved.
 
 **Escalate instead of deciding yourself** when a finding is correct but the fix requires a product decision, changes public API/schema in ways the user should own, or contradicts something the user explicitly asked for.
 
