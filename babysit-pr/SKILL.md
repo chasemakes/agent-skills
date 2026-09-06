@@ -16,6 +16,12 @@ Checks going green is **progress, not completion**: every push triggers a fresh 
 
 At that point come off watch, report (see Reporting), and hand the merge decision to the user: passing review ends the babysitting, it does not authorize merging.
 
+## Let automatic reviews start
+
+Chase's repositories use automatic Codex PR reviews. After opening a PR or pushing a fix, wait for that automatic round; do not post `@codex review` to start babysitting. A manual request can cancel an already-starting or running review and restart it, wasting the work in progress.
+
+An empty first poll, no review in `gh pr view`, or a delayed 👀 reaction does not establish that automatic review is disabled. Check the reactions and pinned summary described below and allow time for those signals to appear. Only request a manual review when the user explicitly asks or you have confirmed automatic review is unavailable and no round is queued or running. If the expected automatic round never starts, follow the timeout/escalation guidance below instead of reflexively pinging the bot.
+
 ## The loop
 
 Each cycle:
