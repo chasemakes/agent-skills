@@ -9,7 +9,7 @@ Persistently watch a pull request until a **terminal outcome**: it is merged, it
 
 Checks going green is **progress, not completion**: every push triggers a fresh review-bot round minutes to tens of minutes later, so don't stand down on green CI alone while a round may still be pending. The watch ends at the **review-passed stand-down**, when all of these hold simultaneously:
 
-- the review bot has explicitly passed the **current head commit** (for Codex: the 👍 reaction; see "Knowing when the review bot has passed"),
+- the review bot has explicitly passed the **current head commit** (for Codex: the 👍 reaction; see "Knowing when the review bot has passed"), **or** its latest round on the current head produced only findings you declined with reasoning (see "Review feedback: triage, don't obey"): a round of declines is a pass, since pushing nothing means no new round is coming,
 - CI is green (or the only failures are ones the user has already acknowledged as pre-existing),
 - the PR is mergeable with no unresolved human change requests,
 - every review thread has a reply, and threads you fixed or bot-declined are resolved (see "Resolving conversations").
@@ -52,9 +52,16 @@ Read `statusCheckRollup` for failing checks; fetch logs (`gh run view <id> --log
 
 This is the part that must never run on autopilot. A reviewer (human or bot) states a claim about the code; your job is to **verify the claim against the actual code first**, then choose one of three outcomes. Findings from bots are hypotheses with a decent hit rate, not instructions.
 
+**"Real" is not the same as "worth fixing."** An adversarial review bot reads the code as an attacker would and will find a scenario in which almost any line misbehaves. Most of those scenarios are technically valid and will never occur. Fixing every one of them is obeying with extra steps: it costs a full gate, a push, and another review round each time, and the bot will find the next adjacent corner in the code you just added. Before fixing, ask two questions:
+
+- **Would a real input trigger it?** For a parser or importer: does any mainstream producer (Excel, Google Sheets, an API, a CRM export) emit this shape, or does it take a crafted file? For concurrency: does the interleaving arise from ordinary use (a retry, a closed tab, two users), or only from an adversary racing the system? For an API: can a caller reach this without already having the privilege it would gain?
+- **What is the blast radius if it does?** Data corruption, data loss, publishing something the user did not intend, a crash or hang, or a privilege gain are always worth fixing, even for an unlikely input. A wrong value in the crafter's own crafted input, a cosmetic difference, or a strictly-more-conforming reading of a spec corner is not.
+
+Fix when both answers say so, or when the blast radius alone does (fail-unsafe on any input is a fix). Decline the rest with the reasoning written out. A bug that is real, unreachable in practice, and harmless when reached is a legitimate decline, not a debt.
+
 For each finding:
 
-1. **Reproduce the reasoning.** Read the code path it names. Trace the scenario it claims. Decide: is the defect real, real-but-overstated, or wrong?
+1. **Reproduce the reasoning.** Read the code path it names. Trace the scenario it claims. Decide: is the defect real, real-but-overstated, or wrong? Then apply the two questions above: reachable by real input, and what happens if so.
 2. **Check the suggested fix independently of the diagnosis.** A correct diagnosis often ships with a harmful suggestion. Reject or replace the suggestion when it would:
    - add a security surface (e.g. persisting IDs that round-trip through client input into privileged calls),
    - restructure pre-existing design the PR didn't touch (scope creep),
@@ -68,7 +75,15 @@ For each finding:
 
 **No orphaned comments.** Every review thread gets at least a reply before you stand down or escalate, even if the reply is just "escalating this to the user because X". A thread with no response looks ignored, and ignored threads erode trust in the whole babysitting loop.
 
-Severity tags (P1/P2/etc.) set your ordering and how much benefit of the doubt to extend, not whether verification happens. Batch one review round into one commit (`Address <reviewer> review: <summary>`) rather than one commit per nit.
+Severity tags (P1/P2/etc.) set your ordering and how much benefit of the doubt to extend, not whether verification happens or whether the fix is warranted: a P1 that needs a crafted input and corrupts only that input is still a decline, and a P2 that hangs the tab on a plausible file is still a fix. Batch one review round into one commit (`Address <reviewer> review: <summary>`) rather than one commit per nit.
+
+**Watch for the endless loop.** Each round of the bot reviews the code the previous round's fixes added, so a PR can accumulate rounds indefinitely without converging. Warning signs: the findings have shifted from the PR's actual purpose to corners of a spec or of an adversary's imagination; each round's findings are "fresh evidence" about the previous round's fix; you are hand-writing infrastructure (a namespace resolver, a lock protocol, a parser) to satisfy the bot rather than the feature. When you notice this:
+
+- **Say so to the user** at once, with the round count, the split of findings between "affects real use" and "spec corner", and a recommendation. Do not wait for the loop to end on its own; it will not.
+- **Name the structural cause** if there is one. Ten rounds of findings against one component usually mean the component's approach is wrong for the job (regexes standing in for a parser, ad-hoc leases standing in for a transaction), and the honest options are to accept the residual risk, or to replace the approach in a separate change, not to keep patching.
+- **Switch to declining** spec-corner findings by default from that point, with a one-paragraph reply each. Keep fixing anything that fails the blast-radius test.
+
+As a rule of thumb, if a PR has taken more than five review rounds, or more than about twenty findings, stop and report before fixing the next batch. The user may prefer to merge, to scope down, or to change approach; those are their calls, and every additional round spends their time as well as yours.
 
 ## Resolving conversations
 
@@ -87,7 +102,7 @@ gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "<id>"
 When to resolve, after replying:
 
 - **Fixed / Partial**: resolve once the fix commit is pushed and your reply cites it. If the reviewer is a bot that re-reviews on push, resolving immediately is fine; the next round will reopen anything you got wrong.
-- **Declined, bot reviewer**: resolve after replying with your reasoning; no human is coming back to close it, and leaving it open makes the PR look unfinished.
+- **Declined, bot reviewer**: resolve after replying with your reasoning; no human is coming back to close it, and leaving it open makes the PR look unfinished. The reply is the record: say what input the finding needs, why no real producer supplies it, and what the outcome would be if one did, so a later reader (or the user) can disagree with evidence rather than re-derive it.
 - **Declined, human reviewer**: reply but leave the thread **unresolved**: the human gets to decide whether your pushback settles it. Resolving a human's thread over their objection is how you get a change-requested review.
 - **Escalated**: reply noting you've surfaced it to the user, leave unresolved.
 
@@ -122,9 +137,10 @@ Stop and surface to the user, with evidence gathered, options framed, and your r
 - the same check failing after a real fix attempt plus the retry budget,
 - CI infrastructure problems or base-branch breakage,
 - a human reviewer requesting changes that conflict with the user's instructions,
+- a review loop that is not converging (see "Watch for the endless loop"): more than five rounds, or findings that have drifted from the PR's purpose,
 - merge itself (never merge without the user's explicit go-ahead unless they pre-authorized it),
 - anything where two reasonable people would choose differently.
 
 ## Reporting
 
-When you come off watch (terminal state or escalation), summarize: what rounds arrived, what you fixed (with commits), what you declined and why, current check/merge state, and what, if anything, needs the user. While on watch, stay quiet except when something actionable happened; "still green, still waiting" is not a report.
+When you come off watch (terminal state or escalation), summarize: what rounds arrived, what you fixed (with commits), what you declined and why, current check/merge state, and what, if anything, needs the user. Group the fixes by whether they affected real use or closed a spec corner, so the user can see at a glance how much of the churn mattered. While on watch, stay quiet except when something actionable happened; "still green, still waiting" is not a report.
