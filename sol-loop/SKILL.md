@@ -33,11 +33,11 @@ Otherwise stop and ask.
 
 Find the base after `git fetch origin`:
 
-- Open PR: `git merge-base HEAD origin/<branch>`, with `<branch>` from
-  `gh pr view --json baseRefName`.
-- No PR: `git merge-base HEAD origin/HEAD`. If `origin/HEAD` is missing,
-  run `git remote set-head origin -a` first.
-- That sha is `<base>` for every round. Do not recompute it.
+- PR: `gh pr view <n> --json baseRefName,headRefOid`. Check out the branch
+  only if clean. Confirm `HEAD` is the PR head, or ahead only by this
+  change. Base: `git merge-base HEAD origin/<baseRefName>`.
+- Local: `git merge-base HEAD origin/<default-branch>`. No remote: a base
+  the user names, or `HEAD` for uncommitted changes only.
 
 The change is base to working tree in those paths, with untracked files.
 Use one diff command all rounds. State intent and out-of-scope in 1-2
