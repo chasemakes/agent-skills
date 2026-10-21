@@ -14,17 +14,17 @@ Checks going green is **progress, not completion**: every push triggers a fresh 
 - the PR is mergeable with no unresolved human change requests,
 - every review thread has a reply, and threads you fixed or bot-declined are resolved (see "Resolving conversations").
 
-At that point come off watch, report (see Reporting), and hand the merge decision to the user: passing review ends the babysitting, it does not authorize merging.
+At that point come off watch (`unwatch_pull_request`), report (see Reporting), and hand the merge decision to the user: passing review ends the babysitting, it does not authorize merging.
 
 ## Let automatic reviews start
 
 Chase's repositories use automatic Codex PR reviews. After opening a PR or pushing a fix, wait for that automatic round; do not post `@codex review` to start babysitting. A manual request can cancel an already-starting or running review and restart it, wasting the work in progress.
 
-An empty first poll, no review in `gh pr view`, or a delayed 👀 reaction does not establish that automatic review is disabled. Check the reactions and pinned summary described below and allow time for those signals to appear. Only request a manual review when the user explicitly asks or you have confirmed automatic review is unavailable and no round is queued or running. If the expected automatic round never starts, follow the timeout/escalation guidance below instead of reflexively pinging the bot.
+An empty first check, no review in `gh pr view`, or a delayed 👀 reaction does not establish that automatic review is disabled. Check the reactions and pinned summary described below and allow time for those signals to appear. Only request a manual review when the user explicitly asks or you have confirmed automatic review is unavailable and no round is queued or running. If the expected automatic round never starts, follow the timeout/escalation guidance below instead of reflexively pinging the bot.
 
 ## The loop
 
-Each cycle:
+A cycle runs when you take on the PR and each time T3 Code's watcher wakes you (see "Watching with T3 Code"):
 
 1. **Gather state** in one call:
    `gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,reviews`
@@ -32,9 +32,18 @@ Each cycle:
    `gh api repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | select(.id > <last_seen_id>)'`
 2. **Act** on what changed (sections below), in priority order: merge conflicts → CI failures → review feedback.
 3. **Verify locally before pushing**: run the repository's full quality gate (for this repo: `bun run check` plus `node scripts/security-rag-regression-checks.mjs`). Never push a fix you haven't run the gate on.
-4. **Push and reply**, then go back on watch.
+4. **Push and reply**, then end your turn; the watcher stays on.
 
-Between cycles, don't tight-loop. Use a background Monitor (or scheduled wakeup) that polls every minute and emits an event only when something actionable appears: a new comment id, a check leaving `pending`, or `mergeStateStatus` changing. After a push, expect the next review-bot round in ~5–10 minutes; don't declare the PR clean before it has had the chance to land.
+## Watching with T3 Code
+
+Between cycles, wait on T3 Code's pull request watcher. Don't poll or run a Monitor or watcher of your own.
+
+- **Start the watch** with `watch_pull_request` (the PR URL, or repository plus number) as soon as you take on the PR; it also links the PR to the thread. Comments that already exist won't wake you, so handle the current state in the same turn, then end it. One call covers every later push; you don't need to call it again after pushing.
+- **What wakes you** (checked every two minutes): a check newly failing, the required checks all passing (once per head commit), a new or edited comment or review from anyone but you, or the branch starting to conflict with its base. Your own replies never wake you, and neither do reactions, so Codex's 👀 and 👍 are invisible to the watcher. Codex's pinned summary comment is edited in place when a round finishes, and that edit does wake you, though it can lag the 👍 by several minutes.
+- **A wake is news, not a verdict.** The message names what changed and shows comments only as short snippets; run the full cycle before acting. "All required checks passed" is not the stand-down: after a push the review round for that head usually lands ~5–10 minutes later.
+- **Re-arm a watch that stops on its own.** The watch ends when the PR merges or closes, when the thread settles or is archived, after 8 failed reads in a row, or after 10 comment-only wakes in a row. The last two send you a message; if you are still babysitting, check the PR yourself and call `watch_pull_request` again.
+- **Come off watch with `unwatch_pull_request`** before you stand down or escalate, so the thread returns to the user's inbox, then report.
+- **A delegated child task can't watch**: its parent thread owns the PR. Run one cycle, then return the PR URL, head SHA, and pending check and review state to the parent.
 
 ## Merge conflicts
 
@@ -121,9 +130,9 @@ Never infer "review passed" from silence: distinguish *running*, *passed*, and *
 2. **Findings:** the bot submits a PR review whose `commit_id` is the reviewed commit:
    `gh api repos/{owner}/{repo}/pulls/<n>/reviews --jq '.[] | select(.user.login == "chatgpt-codex-connector[bot]") | {commit_id, submitted_at}'`
    A review with `commit_id == head` means the round completed **with findings**; triage them.
-3. **Passed:** the bot reacts 👍 (`content: "+1"`) on the PR once all reviews finish with **no findings**. It also maintains a pinned issue comment marked `<!-- codex-pull-request-review-summary -->` (edited in place; find it via `gh api repos/{owner}/{repo}/issues/<n>/comments`) whose table shows `✅ Completed` next to the short head sha; cross-check that the completed commit is the current head.
+3. **Passed:** the bot reacts 👍 (`content: "+1"`) on the PR once all reviews finish with **no findings**. It also maintains a pinned issue comment marked `<!-- codex-pull-request-review-summary -->` (edited in place; find it via `gh api repos/{owner}/{repo}/issues/<n>/comments`) whose table shows `✅ Completed` next to the short head sha; cross-check that the completed commit is the current head. The same comment carries a machine-readable `<!-- codex-review-state:v1 {...} -->` marker (`code_review.commit_sha`, `status`, `has_any_findings`); read that rather than parsing the table. The watcher wakes you when this comment is edited, never for the reactions.
 
-Decision per cycle: summary shows the head sha completed (or 👍 present) **and** no bot review exists for the head commit → **round passed**; if CI is also green and the PR mergeable, this is the stand-down signal that ends the watch. Bot review exists for head → **findings**, triage. 👀 present or summary not yet updated for head → **still running**, keep waiting.
+Decision per cycle: summary shows the head sha completed (or 👍 present) **and** no bot review exists for the head commit → **round passed**; if CI is also green and the PR mergeable, this is the stand-down signal that ends the watch. Bot review exists for head → **findings**, triage. 👀 present or summary not yet updated for head → **still running**: end your turn, and the summary edit wakes you when the round finishes.
 
 Two failure modes to watch: if ~40 minutes pass after a push with no 👀 and no summary update, assume no round is coming: check the issue comments for usage-limit notices (e.g. "You have reached your Codex usage limits"), and surface that to the user rather than waiting forever. And remember a 👍 describes the *current* head only; a new push starts the cycle over.
 
