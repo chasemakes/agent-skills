@@ -37,11 +37,11 @@ Put this section before the model and harness line at the end:
 
 Rounds: 2
 
-| Delegate & Reasoning | Round 1 | Round 2 |
+| Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
-| Claude Opus 5.5 high | 7/10 | 9/10 |
-| GPT 6.1 Sol high | 8/10 | 10/10 |
-| GPT 6 Astra high | 7/10 | 9/10 |
+| Claude Opus 5.5 | 7/10 | 9/10 |
+| GPT 6.1 Sol | 8/10 | 10/10 |
+| GPT 6 Astra | 7/10 | 9/10 |
 ```
 
 If a delegate gives no score, write `no score`. Do not invent one.
