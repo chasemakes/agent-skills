@@ -11,15 +11,23 @@ fixes until reviews return. If the user wants to discard the implementation
 and explore new ideas, skip fixes to code being replaced.
 
 Bring in three delegates to help with the user's request, usually for review
-or feedback. Use one strong model from each of three different providers, at
-high reasoning effort. If the user's instructions name council members, use
-those. Otherwise pick the latest flagship model from each provider, for
-example Claude Opus, GPT Sol, and Gemini Pro.
+or feedback. The council members are fixed:
+
+| Member | Provider | Reasoning effort |
+| --- | --- | --- |
+| Claude Opus 5.5 | Claude | high |
+| GPT-6.1 Sol | Codex | high |
+| GPT-6 Astra | Codex | high |
+
+Use these three unless the user names other members or another effort for
+this request. Do not pick a newer or different model on your own.
 
 In T3 Code, use `orchestrator_capabilities` to resolve the models, then
-`delegate_task` to start one delegate per model in parallel. Elsewhere, use
-the harness's subagent tools. If you cannot reach three providers, or a named
-member is unavailable, report it instead of substituting.
+`delegate_task` to start one delegate per model in parallel. Set the effort
+on every delegate in `target.options`, under the option id capabilities
+lists for that model (Claude: `effort`, Codex: `reasoningEffort`). The model
+defaults are lower. Elsewhere, use the harness's subagent tools. If a member
+or `high` effort is unavailable, report it instead of substituting.
 
 Give each delegate the request and relevant context. For review or feedback,
 keep their work read-only. Collect their responses and summarize the useful
@@ -40,8 +48,8 @@ Rounds: 2
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
-| GPT 6.1 Sol | 8/10 | 10/10 |
-| GPT 6 Astra | 7/10 | 9/10 |
+| GPT-6.1 Sol | 8/10 | 10/10 |
+| GPT-6 Astra | 7/10 | 9/10 |
 ```
 
 If a delegate gives no score, write `no score`. Do not invent one.
