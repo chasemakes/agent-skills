@@ -23,6 +23,7 @@ The user grants you permission to:
 
 - Merge the PR once the merge gate passes.
 - Force-push the PR's own branch with `--force-with-lease` after a rebase.
+- Delete the PR's own branch, local and remote, after the merge.
 
 ## Steps
 
@@ -36,10 +37,11 @@ The user grants you permission to:
 4. **Babysit the PR** with the `babysit-pr` skill. Fix real findings and CI
    failures. Get proof for each fix before you push it.
 5. **Merge** when the merge gate passes.
-6. **Report** in your final message: the PR link, the merge commit, your proof,
-   and each decision you made for the user.
+6. **Clean up** what this run created. See "Cleanup".
+7. **Report** in your final message: the PR link, the merge commit, your proof,
+   each decision you made for the user, and anything cleanup left behind.
 
-Stay active from step 1 to step 6. If you end your turn while checks or bots are
+Stay active from step 1 to step 7. If you end your turn while checks or bots are
 pending, the work stops, because nobody will prompt you again. Wait with the
 watcher from `babysit-pr`, so something wakes you when the PR changes. In T3
 Code that is `watch_pull_request`. If you stop before the merge, call
@@ -56,8 +58,7 @@ reproduction, a screenshot. Use the most direct proof the change allows:
 - Add one focused test that fails without the fix, when the behavior has none
   and the repo has a test setup.
 - For UI and runtime behavior, run the app and look at the change. Green mocked
-  tests do not prove that the user experience works. Attach screenshots with the
-  `file-upload` skill when they help.
+  tests do not prove that the user experience works.
 
 When you cannot find a way to prove a change, you do not have full confidence.
 Ask the user.
@@ -79,6 +80,26 @@ PRs. If the repo uses a merge queue or auto-merge, stay until GitHub reports the
 PR as merged. Merge through branch protection as configured. Never use `--admin`
 or other bypasses. You can ignore automated reviews that request "needs human
 review" if you have high confidence in your changes.
+
+## Cleanup
+
+Clean up only after GitHub reports the PR as merged. Remove what this run
+created, and nothing else:
+
+- Stop the PR watcher. In T3 Code that is `unwatch_pull_request`.
+- Delete the remote branch if GitHub did not delete it on merge.
+- In the main checkout, switch to the default branch and pull, so it includes
+  the merge commit. Then delete the local branch. A squash or rebase merge
+  needs `git branch -D`, because git does not see the branch as merged.
+- If you created a worktree for this work, remove it. Leave a worktree that
+  the user or the harness created, and only delete the local branch if it is
+  not checked out there.
+- Stop servers and background processes you started for proof. Close browser
+  tabs you opened. Delete scratch files you created.
+
+Leave everything that existed before this run: other branches, stashes, and
+uncommitted changes that are not yours. If a cleanup step fails, do not ask the
+user. Skip it and name what is left in the report.
 
 ## Asking the user
 

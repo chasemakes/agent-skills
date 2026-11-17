@@ -10,16 +10,15 @@ relevant checks. Give council the updated implementation; do not defer known
 fixes until reviews return. If the user wants to discard the implementation
 and explore new ideas, skip fixes to code being replaced.
 
-Bring in three delegates to help with the user's request, usually for review
+Bring in two delegates to help with the user's request, usually for review
 or feedback. The council members are fixed:
 
 | Member | Provider | Reasoning effort |
 | --- | --- | --- |
 | Claude Opus 5.5 | Claude | high |
-| GPT-6.1 Sol | Codex | high |
-| GPT-6 Astra | Codex | high |
+| GPT-6.2 Sol | Codex | high |
 
-Use these three unless the user names other members or another effort for
+Use these two unless the user names other members or another effort for
 this request. Do not pick a newer or different model on your own.
 
 In T3 Code, use `orchestrator_capabilities` to resolve the models, then
@@ -48,8 +47,7 @@ Rounds: 2
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
-| GPT-6.1 Sol | 8/10 | 10/10 |
-| GPT-6 Astra | 7/10 | 9/10 |
+| GPT-6.2 Sol | 8/10 | 10/10 |
 ```
 
 If a delegate gives no score, write `no score`. Do not invent one.
