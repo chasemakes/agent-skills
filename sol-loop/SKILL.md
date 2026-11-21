@@ -11,7 +11,7 @@ metadata:
 
 # sol-loop
 
-This is a workflow for making your code changes more correct before (or sometimes after) filing a pull request. tl;dr - use GPT-6.1 Sol on xhigh reasoning to review your code in a loop.
+This is a workflow for making your code changes more correct before (or sometimes after) filing a pull request. tl;dr - use GPT-6.1 Sol on high reasoning to review your code in a loop.
 
 Make the most minimal possible changes to appease the Sol reviewers. Be careful of scope creep and don't be scared to push back.
 
@@ -47,20 +47,20 @@ missing or pre-failing checks in the brief.
 ## 2. Start Sol
 
 In T3, call `orchestrator_capabilities`. Pick the latest Sol unless the user
-named a version. Do not hardcode an ID. Run Sol at `xhigh` reasoning unless
+named a version. Do not hardcode an ID. Run Sol at `high` reasoning unless
 the user names another effort: set it in `target.options` under the option
 id capabilities list for that model (Codex: `reasoningEffort`). Set it every
 round. The model default is lower, and the parent's effort may not carry
-across providers. If the model offers no `xhigh`, stop and ask. Record
+across providers. If the model offers no `high`, stop and ask. Record
 provider, model, and effort. Use `delegate_task` every round
 (`role: "review"`, `mode: "async"`). Save `taskId`. New `clientRequestId`
 per round. `childThreadId` is storage, not the next target. Do not use
 `t3_thread_send`, `create_threads`, or `t3_thread_launch` for review.
 
 If T3 tools are not listed, try one direct capability call. Outside T3, use
-a native Sol subagent at `xhigh` and keep its ID. Use Claude's `sol` agent
+a native Sol subagent at `high` and keep its ID. Use Claude's `sol` agent
 only if `~/.claude/agents/sol.md` fits the requested model and effort. If no
-route runs Sol at `xhigh`, report the blocker. Do not substitute a model or
+route runs Sol at `high`, report the blocker. Do not substitute a model or
 effort.
 
 Do not edit scoped files while review runs. Wait for the notice. Do not
