@@ -6,18 +6,9 @@
 </p>
 
 <p align="center">
-  <a href="#skills"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/skills-6-18181b.svg?variant=secondary&logo=ri:RiStackLine&mode=dark" />
-    <img alt="6 skills" src="https://shieldcn.dev/badge/skills-6-18181b.svg?variant=secondary&logo=ri:RiStackLine&mode=light" />
-  </picture></a>
-  <a href="https://github.com/chasemakes/agent-skills/commits/master"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/last-commit/chasemakes/agent-skills.svg?variant=secondary&mode=dark" />
-    <img alt="Last commit" src="https://shieldcn.dev/github/last-commit/chasemakes/agent-skills.svg?variant=secondary&mode=light" />
-  </picture></a>
-  <a href="https://www.skills.sh"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/install-skills.sh-18181b.svg?variant=secondary&logo=ri:RiTerminalBoxLine&mode=dark" />
-    <img alt="Install with skills.sh" src="https://shieldcn.dev/badge/install-skills.sh-18181b.svg?variant=secondary&logo=ri:RiTerminalBoxLine&mode=light" />
-  </picture></a>
+  <a href="#skills"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/skills-6.svg?variant=secondary&logo=ri:RiStackLine&mode=dark" /><img alt="6 skills" src="https://shieldcn.dev/badge/skills-6.svg?variant=secondary&logo=ri:RiStackLine&mode=light" /></picture></a>
+  <a href="https://github.com/chasemakes/agent-skills/commits/master"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/last-commit/chasemakes/agent-skills.svg?variant=secondary&mode=dark" /><img alt="Last commit" src="https://shieldcn.dev/github/last-commit/chasemakes/agent-skills.svg?variant=secondary&mode=light" /></picture></a>
+  <a href="https://www.skills.sh"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/install-skills.sh.svg?variant=secondary&logo=ri:RiTerminalBoxLine&mode=dark" /><img alt="Install with skills.sh" src="https://shieldcn.dev/badge/install-skills.sh.svg?variant=secondary&logo=ri:RiTerminalBoxLine&mode=light" /></picture></a>
 </p>
 
 Personal agent skills, installable via [skills.sh](https://www.skills.sh) CLI:
