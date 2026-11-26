@@ -16,11 +16,13 @@ or feedback. The council members are fixed:
 | Member | Provider | Reasoning effort |
 | --- | --- | --- |
 | Claude Opus 5.5 | Claude | high |
-| GPT-6.2 Sol | Codex | high |
+| GPT Sol (latest version) | Codex | high |
 | Gemini 4 Neon | Antigravity | high |
 
 Use these three unless the user names other members or another effort for
-this request. Do not pick a newer or different model on your own.
+this request. For GPT Sol, use the latest Sol version available and do not
+hardcode a version. For the other two, do not pick a newer or different
+model on your own.
 
 In T3 Code, use `orchestrator_capabilities` to resolve the models, then
 `delegate_task` to start one delegate per model in parallel. Set the effort
@@ -49,7 +51,7 @@ Rounds: 2
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
-| GPT-6.2 Sol | 8/10 | 10/10 |
+| GPT Sol | 8/10 | 10/10 |
 | Gemini 4 Neon | 8/10 | 9/10 |
 ```
 

@@ -11,7 +11,7 @@ metadata:
 
 # sol-loop
 
-This is a workflow for making your code changes more correct before (or sometimes after) filing a pull request. tl;dr - use GPT-6.1 Sol on high reasoning to review your code in a loop.
+This is a workflow for making your code changes more correct before (or sometimes after) filing a pull request. tl;dr - use the latest GPT Sol model on high reasoning to review your code in a loop.
 
 Make the most minimal possible changes to appease the Sol reviewers. Be careful of scope creep and don't be scared to push back.
 

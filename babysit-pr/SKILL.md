@@ -18,7 +18,7 @@ At that point come off watch (`unwatch_pull_request`), report (see Reporting), a
 
 ## Let automatic reviews start
 
-Chase's repositories use automatic Codex PR reviews. After opening a PR or pushing a fix, wait for that automatic round; do not post `@codex review` to start babysitting. A manual request can cancel an already-starting or running review and restart it, wasting the work in progress.
+This skill assumes the repository has automatic Codex PR reviews enabled. After opening a PR or pushing a fix, wait for that automatic round; do not post `@codex review` to start babysitting. A manual request can cancel an already-starting or running review and restart it, wasting the work in progress.
 
 An empty first check, no review in `gh pr view`, or a delayed 👀 reaction does not establish that automatic review is disabled. Check the reactions and pinned summary described below and allow time for those signals to appear. Only request a manual review when the user explicitly asks or you have confirmed automatic review is unavailable and no round is queued or running. If the expected automatic round never starts, follow the timeout/escalation guidance below instead of reflexively pinging the bot.
 
@@ -31,7 +31,7 @@ A cycle runs when you take on the PR and each time T3 Code's watcher wakes you (
    plus new inline comments since your last high-water mark:
    `gh api repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | select(.id > <last_seen_id>)'`
 2. **Act** on what changed (sections below), in priority order: merge conflicts → CI failures → review feedback.
-3. **Verify locally before pushing**: run the repository's full quality gate (for this repo: `bun run check` plus `node scripts/security-rag-regression-checks.mjs`). Never push a fix you haven't run the gate on.
+3. **Verify locally before pushing**: run the repository's full quality gate. Never push a fix you haven't run the gate on.
 4. **Push and reply**, then end your turn; the watcher stays on.
 
 ## Watching with T3 Code
